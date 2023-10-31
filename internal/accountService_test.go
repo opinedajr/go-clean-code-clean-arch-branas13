@@ -114,3 +114,23 @@ func TestSignupInvalidCarplate(t *testing.T) {
 		t.Errorf("Can't create account with invalid Carplate")
 	}
 }
+
+func TestSignupInvalidCpf(t *testing.T) {
+
+	s, _ := NewAccountService()
+
+	randomId := rand.Intn(1000)
+	input := map[string]string{
+		"name":        "Joseph",
+		"email":       "joseph." + strconv.Itoa(randomId) + "@gmail.com",
+		"cpf":         "958.187.055-00",
+		"isPassenger": "true",
+		"carplate":    "",
+	}
+
+	output, _ := s.Signup(input)
+
+	if len(output) > 0 {
+		t.Errorf("Can't create account with invalid CPF")
+	}
+}

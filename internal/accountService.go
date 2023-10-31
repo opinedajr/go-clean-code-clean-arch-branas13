@@ -43,6 +43,9 @@ func (s *AccountService) Signup(input map[string]string) (string, error) {
 	if existingAccount > 0 {
 		return "", fmt.Errorf("Account already exists")
 	}
+	if validCpf := ValidateCpf(input["cpf"]); !validCpf {
+		return "", fmt.Errorf("Invalid CPF")
+	}
 	if !validName.MatchString(input["name"]) {
 		return "", fmt.Errorf("Invalid name")
 	}
