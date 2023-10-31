@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+var randomAccountEmail = "joseph." + strconv.Itoa(rand.Intn(1000)) + "@gmail.com"
+
 func TestSignup(t *testing.T) {
 
 	s, err := NewAccountService()
@@ -16,10 +18,9 @@ func TestSignup(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	randomId := rand.Intn(1000)
 	input := map[string]string{
-		"name":        "Joseph",
-		"email":       "joseph." + strconv.Itoa(randomId) + "@gmail.com",
+		"name":        "Joseph Lastname",
+		"email":       randomAccountEmail,
 		"cpf":         "01234567890",
 		"isPassenger": "true",
 		"carplate":    "",
@@ -33,5 +34,83 @@ func TestSignup(t *testing.T) {
 
 	if len(output) == 0 {
 		t.Errorf("Not create account")
+	}
+}
+
+func TestSignupExistingEmail(t *testing.T) {
+
+	s, _ := NewAccountService()
+
+	input := map[string]string{
+		"name":        "Joseph Second Account",
+		"email":       randomAccountEmail,
+		"cpf":         "01234567890",
+		"isPassenger": "true",
+		"carplate":    "",
+	}
+
+	output, _ := s.Signup(input)
+
+	if len(output) > 0 {
+		t.Errorf("Can't create account with a existing e-mail")
+	}
+}
+
+func TestSignupInvalidName(t *testing.T) {
+
+	s, _ := NewAccountService()
+
+	randomId := rand.Intn(1000)
+	input := map[string]string{
+		"name":        "Joseph",
+		"email":       "joseph." + strconv.Itoa(randomId) + "@gmail.com",
+		"cpf":         "01234567890",
+		"isPassenger": "true",
+		"carplate":    "",
+	}
+
+	output, _ := s.Signup(input)
+
+	if len(output) > 0 {
+		t.Errorf("Can't create account with invalid name")
+	}
+}
+
+func TestSignupInvalidEmail(t *testing.T) {
+
+	s, _ := NewAccountService()
+
+	input := map[string]string{
+		"name":        "Joseph Lastname",
+		"email":       "joseph@gmail",
+		"cpf":         "01234567890",
+		"isPassenger": "true",
+		"carplate":    "",
+	}
+
+	output, _ := s.Signup(input)
+
+	if len(output) > 0 {
+		t.Errorf("Can't create account with invalid e-mail")
+	}
+}
+
+func TestSignupInvalidCarplate(t *testing.T) {
+
+	s, _ := NewAccountService()
+
+	randomId := rand.Intn(1000)
+	input := map[string]string{
+		"name":        "Joseph",
+		"email":       "joseph." + strconv.Itoa(randomId) + "@gmail.com",
+		"cpf":         "01234567890",
+		"isPassenger": "true",
+		"carplate":    "AAA",
+	}
+
+	output, _ := s.Signup(input)
+
+	if len(output) > 0 {
+		t.Errorf("Can't create account with invalid Carplate")
 	}
 }
