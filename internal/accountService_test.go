@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 )
 
 var randomAccountEmail = "joseph." + strconv.Itoa(rand.Intn(1000)) + "@gmail.com"
+var newAccountId = ""
 
 func TestSignup(t *testing.T) {
 
@@ -35,6 +37,8 @@ func TestSignup(t *testing.T) {
 	if len(output) == 0 {
 		t.Errorf("Not create account")
 	}
+
+	newAccountId = output
 }
 
 func TestSignupExistingEmail(t *testing.T) {
@@ -132,5 +136,19 @@ func TestSignupInvalidCpf(t *testing.T) {
 
 	if len(output) > 0 {
 		t.Errorf("Can't create account with invalid CPF")
+	}
+}
+
+func TestGetAccount(t *testing.T) {
+	s, _ := NewAccountService()
+
+	output, error := s.GetAccount(newAccountId)
+
+	if error != nil {
+		t.Errorf(error.Error())
+	}
+
+	if len(fmt.Sprint(output["name"])) == 0 {
+		t.Errorf("Not retrieve account")
 	}
 }

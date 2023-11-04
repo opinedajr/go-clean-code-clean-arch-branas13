@@ -11,6 +11,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type Service interface {
+	Signup(input map[string]string) (string, error)
+	GetAccount(id string) (map[string]interface{}, error)
+}
+
 type AccountService struct {
 	db *sql.DB
 }
@@ -28,6 +33,33 @@ func NewAccountService() (*AccountService, error) {
 	return &AccountService{
 		db: db,
 	}, nil
+}
+
+func (s *AccountService) GetAccount(id string) (map[string]interface{}, error) {
+	rows, err := s.db.Query(`SELECT account_id,name,email,cpf FROM account WHERE account_id = $1`, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var account_id, name, email, cpf string
+		err := rows.Scan(
+			&account_id,
+			&name,
+			&email,
+			&cpf,
+		)
+		if err == nil {
+			output := map[string]interface{}{
+				"account_id": account_id,
+				"name":       name,
+				"email":      email,
+				"cpf":        cpf,
+			}
+			return output, err
+		}
+	}
+
+	return nil, fmt.Errorf("Account %s not found", id)
 }
 
 func (s *AccountService) Signup(input map[string]string) (string, error) {
