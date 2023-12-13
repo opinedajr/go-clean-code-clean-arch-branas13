@@ -63,6 +63,7 @@ func (s *AccountService) GetAccount(id string) (map[string]interface{}, error) {
 }
 
 func (s *AccountService) Signup(input map[string]string) (string, error) {
+	
 	var existingAccount int
 	var validName = regexp.MustCompile(`^[A-Z][a-z]+ [A-Z][a-z]+$`)
 	var validEmail = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
