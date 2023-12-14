@@ -1,10 +1,8 @@
 package internal
 
 import (
-	"database/sql"
 	"fmt"
 	"regexp"
-	"time"
 
 	_ "github.com/lib/pq"
 
@@ -17,63 +15,37 @@ type Service interface {
 }
 
 type AccountService struct {
-	db *sql.DB
+	dao AccountDao
 }
 
-func NewAccountService() (*AccountService, error) {
-	connStr := "user=postgres dbname=cccat13 password=pg123 sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
+func NewAccountService(dao AccountDao) (*AccountService, error) {
 
 	return &AccountService{
-		db: db,
+		dao: dao,
 	}, nil
 }
 
 func (s *AccountService) GetAccount(id string) (map[string]interface{}, error) {
-	rows, err := s.db.Query(`SELECT account_id,name,email,cpf FROM account WHERE account_id = $1`, id)
+	output, err := s.dao.getById(id)
 	if err != nil {
 		return nil, err
 	}
-	for rows.Next() {
-		var account_id, name, email, cpf string
-		err := rows.Scan(
-			&account_id,
-			&name,
-			&email,
-			&cpf,
-		)
-		if err == nil {
-			output := map[string]interface{}{
-				"account_id": account_id,
-				"name":       name,
-				"email":      email,
-				"cpf":        cpf,
-			}
-			return output, err
-		}
-	}
 
-	return nil, fmt.Errorf("Account %s not found", id)
+	return output, err
 }
 
 func (s *AccountService) Signup(input map[string]string) (string, error) {
-	
-	var existingAccount int
+
 	var validName = regexp.MustCompile(`^[A-Z][a-z]+ [A-Z][a-z]+$`)
 	var validEmail = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	var validCarplate = regexp.MustCompile(`^[A-Z]{3}[0-9]{1}[A-Z]{1}[0-9]{2}$`)
 
 	accountId := uuid.NewString()
 	verificationCode := uuid.NewString()
-	date := time.Now().UTC()
-	s.db.QueryRow(`SELECT count(*) FROM account WHERE email = $1`, input["email"]).Scan(&existingAccount)
-	if existingAccount > 0 {
+
+	existingAccount, _ := s.dao.getByEmail(input["email"])
+
+	if existingAccount != nil {
 		return "", fmt.Errorf("Account already exists")
 	}
 	if validCpf := ValidateCpf(input["cpf"]); !validCpf {
@@ -88,11 +60,14 @@ func (s *AccountService) Signup(input map[string]string) (string, error) {
 	if len(input["carplate"]) > 0 && !validCarplate.MatchString(input["carplate"]) {
 		return "", fmt.Errorf("Invalid carplate")
 	}
-	_, err := s.db.Query(
-		`INSERT INTO account (account_id, name, email, cpf, car_plate, is_passenger, is_driver, date, is_verified, verification_code) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-		accountId, input["name"], input["email"], input["cpf"], input["carplate"], true, false, date, false, verificationCode,
-	)
-	if err != nil {
+
+	input["id"] = accountId
+	input["date"] = "2023-12-07 23:28:18.203"
+	input["verificationCode"] = verificationCode
+
+	saved, err := s.dao.save(input)
+
+	if !saved {
 		return "", err
 	}
 

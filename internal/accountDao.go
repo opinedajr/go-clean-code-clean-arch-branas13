@@ -8,6 +8,7 @@ import (
 type AccountDaoInterface interface {
 	save(input map[string]string) (string, error)
 	getByEmail(email string) (map[string]interface{}, error)
+	getById(id string) (map[string]interface{}, error)
 }
 
 type AccountDao struct {
@@ -66,4 +67,31 @@ func (ad *AccountDao) getByEmail(email string) (map[string]interface{}, error) {
 	}
 
 	return nil, fmt.Errorf("Account %s not found", email)
+}
+
+func (ad *AccountDao) getById(id string) (map[string]interface{}, error) {
+	rows, err := ad.db.Query(`SELECT account_id,name,email,cpf FROM account WHERE account_id = $1`, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var account_id, name, email, cpf string
+		err := rows.Scan(
+			&account_id,
+			&name,
+			&email,
+			&cpf,
+		)
+		if err == nil {
+			output := map[string]interface{}{
+				"account_id": account_id,
+				"name":       name,
+				"email":      email,
+				"cpf":        cpf,
+			}
+			return output, err
+		}
+	}
+
+	return nil, fmt.Errorf("Account %s not found", id)
 }

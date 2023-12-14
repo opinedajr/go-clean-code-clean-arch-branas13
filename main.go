@@ -10,7 +10,13 @@ import (
 func main() {
 	fmt.Println("Clean Code and Clean Arch Branas.io - 13")
 
-	accountService, err := internal.NewAccountService()
+	ad, err := internal.NewAccountDao()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	accountService, err := internal.NewAccountService(*ad)
 
 	if err != nil {
 		log.Fatal(err)

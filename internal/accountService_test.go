@@ -10,15 +10,27 @@ import (
 
 var randomAccountEmail = "joseph." + strconv.Itoa(rand.Intn(1000)) + "@gmail.com"
 var newAccountId = ""
+var service AccountService
 
-func TestSignup(t *testing.T) {
+func TestNewAccountService(t *testing.T) {
+	ad, err := NewAccountDao()
 
-	s, err := NewAccountService()
+	if err != nil {
+		t.Errorf("Fail initiate AccountDao")
+		log.Fatal(err)
+	}
+
+	s, err := NewAccountService(*ad)
 
 	if err != nil {
 		t.Errorf("Connection fail")
 		log.Fatal(err)
 	}
+
+	service = *s
+}
+
+func TestSignup(t *testing.T) {
 
 	input := map[string]string{
 		"name":        "Joseph Lastname",
@@ -28,7 +40,7 @@ func TestSignup(t *testing.T) {
 		"carplate":    "",
 	}
 
-	output, err := s.Signup(input)
+	output, err := service.Signup(input)
 
 	if err != nil {
 		t.Errorf("Signup return a error %s", err)
@@ -43,8 +55,6 @@ func TestSignup(t *testing.T) {
 
 func TestSignupExistingEmail(t *testing.T) {
 
-	s, _ := NewAccountService()
-
 	input := map[string]string{
 		"name":        "Joseph Second Account",
 		"email":       randomAccountEmail,
@@ -53,7 +63,7 @@ func TestSignupExistingEmail(t *testing.T) {
 		"carplate":    "",
 	}
 
-	output, _ := s.Signup(input)
+	output, _ := service.Signup(input)
 
 	if len(output) > 0 {
 		t.Errorf("Can't create account with a existing e-mail")
@@ -61,8 +71,6 @@ func TestSignupExistingEmail(t *testing.T) {
 }
 
 func TestSignupInvalidName(t *testing.T) {
-
-	s, _ := NewAccountService()
 
 	randomId := rand.Intn(1000)
 	input := map[string]string{
@@ -73,7 +81,7 @@ func TestSignupInvalidName(t *testing.T) {
 		"carplate":    "",
 	}
 
-	output, _ := s.Signup(input)
+	output, _ := service.Signup(input)
 
 	if len(output) > 0 {
 		t.Errorf("Can't create account with invalid name")
@@ -81,8 +89,6 @@ func TestSignupInvalidName(t *testing.T) {
 }
 
 func TestSignupInvalidEmail(t *testing.T) {
-
-	s, _ := NewAccountService()
 
 	input := map[string]string{
 		"name":        "Joseph Lastname",
@@ -92,7 +98,7 @@ func TestSignupInvalidEmail(t *testing.T) {
 		"carplate":    "",
 	}
 
-	output, _ := s.Signup(input)
+	output, _ := service.Signup(input)
 
 	if len(output) > 0 {
 		t.Errorf("Can't create account with invalid e-mail")
@@ -100,8 +106,6 @@ func TestSignupInvalidEmail(t *testing.T) {
 }
 
 func TestSignupInvalidCarplate(t *testing.T) {
-
-	s, _ := NewAccountService()
 
 	randomId := rand.Intn(1000)
 	input := map[string]string{
@@ -112,7 +116,7 @@ func TestSignupInvalidCarplate(t *testing.T) {
 		"carplate":    "AAA",
 	}
 
-	output, _ := s.Signup(input)
+	output, _ := service.Signup(input)
 
 	if len(output) > 0 {
 		t.Errorf("Can't create account with invalid Carplate")
@@ -120,8 +124,6 @@ func TestSignupInvalidCarplate(t *testing.T) {
 }
 
 func TestSignupInvalidCpf(t *testing.T) {
-
-	s, _ := NewAccountService()
 
 	randomId := rand.Intn(1000)
 	input := map[string]string{
@@ -132,7 +134,7 @@ func TestSignupInvalidCpf(t *testing.T) {
 		"carplate":    "",
 	}
 
-	output, _ := s.Signup(input)
+	output, _ := service.Signup(input)
 
 	if len(output) > 0 {
 		t.Errorf("Can't create account with invalid CPF")
@@ -140,9 +142,8 @@ func TestSignupInvalidCpf(t *testing.T) {
 }
 
 func TestGetAccount(t *testing.T) {
-	s, _ := NewAccountService()
 
-	output, error := s.GetAccount(newAccountId)
+	output, error := service.GetAccount(newAccountId)
 
 	if error != nil {
 		t.Errorf(error.Error())
